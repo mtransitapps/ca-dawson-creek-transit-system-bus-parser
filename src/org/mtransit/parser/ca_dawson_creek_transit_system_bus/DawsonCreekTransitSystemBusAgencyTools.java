@@ -50,6 +50,11 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		System.out.printf("\nGenerating Dawson Creek Transit System bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
+	@Override
+	public boolean excludingAll() {
+		return this.serviceIds != null && this.serviceIds.isEmpty();
+	}
+
 	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS = null;
 
 	@Override
