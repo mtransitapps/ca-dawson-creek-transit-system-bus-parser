@@ -25,8 +25,8 @@ import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
 
-// https://bctransit.com/*/footer/open-data
-// https://bctransit.com/servlet/bctransit/data/GTFS - Dawson Creek
+// https://www.bctransit.com/open-data
+// https://www.bctransit.com/data/gtfs/dawson-creek.zip
 public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
