@@ -148,6 +148,11 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		);
 	}
 
+	@Override
+	public boolean directionFinderEnabled() {
+		return true;
+	}
+
 	private static final Pattern STARTS_WITH_RSN = Pattern.compile("(^[0-9]+ )", Pattern.CASE_INSENSITIVE);
 
 	@NotNull
