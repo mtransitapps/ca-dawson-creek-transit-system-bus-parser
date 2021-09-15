@@ -1,90 +1,43 @@
 package org.mtransit.parser.ca_dawson_creek_transit_system_bus;
 
+import static org.mtransit.commons.StringUtils.EMPTY;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.mtransit.parser.CleanUtils;
+import org.mtransit.commons.CleanUtils;
+import org.mtransit.commons.StringUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.StringUtils;
-import org.mtransit.parser.Utils;
-import org.mtransit.parser.gtfs.data.GCalendar;
-import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
-import org.mtransit.parser.gtfs.data.GSpec;
-import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.mt.data.MTrip;
 
-import java.util.HashSet;
 import java.util.regex.Pattern;
-
-import static org.mtransit.parser.StringUtils.EMPTY;
 
 // https://www.bctransit.com/open-data
 // https://www.bctransit.com/data/gtfs/dawson-creek.zip
 public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
-	public static void main(@Nullable String[] args) {
-		if (args == null || args.length == 0) {
-			args = new String[3];
-			args[0] = "input/gtfs.zip";
-			args[1] = "../../mtransitapps/ca-dawson-creek-transit-system-bus-android/res/raw/";
-			args[2] = ""; // files-prefix
-		}
+	public static void main(@NotNull String[] args) {
 		new DawsonCreekTransitSystemBusAgencyTools().start(args);
 	}
 
+	@Override
+	public boolean defaultExcludeEnabled() {
+		return true;
+	}
+
+	@NotNull
+	@Override
+	public String getAgencyName() {
+		return "Dawson Creek TS";
+	}
+
+	private static final String AGENCY_ID = "26"; // Dawson Creek Transit System only
+
 	@Nullable
-	private HashSet<Integer> serviceIdInts;
-
 	@Override
-	public void start(@NotNull String[] args) {
-		MTLog.log("Generating Dawson Creek Transit System bus data...");
-		long start = System.currentTimeMillis();
-		this.serviceIdInts = extractUsefulServiceIdInts(args, this, true);
-		super.start(args);
-		MTLog.log("Generating Dawson Creek Transit System bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
-	}
-
-	@Override
-	public boolean excludingAll() {
-		return this.serviceIdInts != null && this.serviceIdInts.isEmpty();
-	}
-
-	@Override
-	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarInt(gCalendar, this.serviceIdInts);
-		}
-		return super.excludeCalendar(gCalendar);
-	}
-
-	@Override
-	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIdInts);
-		}
-		return super.excludeCalendarDate(gCalendarDates);
-	}
-
-	private static final String INCLUDE_AGENCY_ID = "26"; // Dawson Creek Transit System only
-
-	@Override
-	public boolean excludeRoute(@NotNull GRoute gRoute) {
-		//noinspection deprecation
-		if (!INCLUDE_AGENCY_ID.equals(gRoute.getAgencyId())) {
-			return true;
-		}
-		return super.excludeRoute(gRoute);
-	}
-
-	@Override
-	public boolean excludeTrip(@NotNull GTrip gTrip) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessTripInt(gTrip, this.serviceIdInts);
-		}
-		return super.excludeTrip(gTrip);
+	public String getAgencyId() {
+		return AGENCY_ID;
 	}
 
 	@NotNull
@@ -94,18 +47,27 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public long getRouteId(@NotNull GRoute gRoute) {
-		return Long.parseLong(gRoute.getRouteShortName()); // use route short name as route ID
+	public boolean defaultRouteIdEnabled() {
+		return true;
+	}
+
+	@Override
+	public boolean useRouteShortNameForRouteId() {
+		return true;
 	}
 
 	@NotNull
 	@Override
-	public String getRouteLongName(@NotNull GRoute gRoute) {
-		String routeLongName = gRoute.getRouteLongNameOrDefault();
+	public String cleanRouteLongName(@NotNull String routeLongName) {
 		routeLongName = CleanUtils.cleanSlashes(routeLongName);
 		routeLongName = CleanUtils.cleanNumbers(routeLongName);
 		routeLongName = CleanUtils.cleanStreetTypes(routeLongName);
 		return CleanUtils.cleanLabel(routeLongName);
+	}
+
+	@Override
+	public boolean defaultAgencyColorEnabled() {
+		return true;
 	}
 
 	private static final String AGENCY_COLOR_GREEN = "34B233";// GREEN (from PDF Corporate Graphic Standards)
@@ -121,7 +83,7 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Nullable
 	@Override
-	public String getRouteColor(@NotNull GRoute gRoute) {
+	public String getRouteColor(@NotNull GRoute gRoute, @NotNull MAgency agency) {
 		if (StringUtils.isEmpty(gRoute.getRouteColor())) {
 			int rsn = Integer.parseInt(gRoute.getRouteShortName());
 			switch (rsn) {
@@ -133,19 +95,7 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			}
 			throw new MTLog.Fatal("Unexpected route color for %s!", gRoute);
 		}
-		return super.getRouteColor(gRoute);
-	}
-
-	@Override
-	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
-		String tripHeadsign = gTrip.getTripHeadsignOrDefault();
-		if (StringUtils.isEmpty(tripHeadsign)) {
-			tripHeadsign = mRoute.getLongName();
-		}
-		mTrip.setHeadsignString(
-				cleanTripHeadsign(tripHeadsign),
-				gTrip.getDirectionIdOrDefault()
-		);
+		return super.getRouteColor(gRoute, agency);
 	}
 
 	@Override
@@ -164,11 +114,6 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
 		return CleanUtils.cleanLabel(tripHeadsign);
-	}
-
-	@Override
-	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
-		throw new MTLog.Fatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
 	}
 
 	@NotNull
