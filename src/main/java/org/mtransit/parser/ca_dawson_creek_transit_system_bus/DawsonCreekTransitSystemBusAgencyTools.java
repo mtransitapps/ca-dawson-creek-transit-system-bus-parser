@@ -14,7 +14,8 @@ import org.mtransit.parser.mt.data.MAgency;
 import java.util.regex.Pattern;
 
 // https://www.bctransit.com/open-data
-// https://www.bctransit.com/data/gtfs/dawson-creek.zip
+// OLD: https://www.bctransit.com/data/gtfs/dawson-creek.zip
+// TODO: https://bct.tmix.se/gtfs-realtime/alerts.pb?operatorIds=27
 public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
@@ -30,14 +31,6 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String getAgencyName() {
 		return "Dawson Creek TS";
-	}
-
-	private static final String AGENCY_ID = "26"; // Dawson Creek Transit System only
-
-	@Nullable
-	@Override
-	public String getAgencyId() {
-		return AGENCY_ID;
 	}
 
 	@NotNull
