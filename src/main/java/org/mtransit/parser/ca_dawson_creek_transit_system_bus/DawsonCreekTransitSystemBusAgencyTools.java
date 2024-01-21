@@ -5,7 +5,6 @@ import static org.mtransit.commons.StringUtils.EMPTY;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mtransit.commons.CleanUtils;
-import org.mtransit.commons.StringUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
 import org.mtransit.parser.gtfs.data.GRoute;
@@ -14,8 +13,6 @@ import org.mtransit.parser.mt.data.MAgency;
 import java.util.regex.Pattern;
 
 // https://www.bctransit.com/open-data
-// OLD: https://www.bctransit.com/data/gtfs/dawson-creek.zip
-// TODO: https://bct.tmix.se/gtfs-realtime/alerts.pb?operatorIds=27
 public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
@@ -46,7 +43,12 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean useRouteShortNameForRouteId() {
-		return true;
+		return false; // route ID used by GTFS RT
+	}
+
+	@Override
+	public @Nullable String getRouteIdCleanupRegex() {
+		return "\\-[A-Z]+$";
 	}
 
 	@NotNull
@@ -74,21 +76,17 @@ public class DawsonCreekTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	@Nullable
 	@Override
-	public String getRouteColor(@NotNull GRoute gRoute, @NotNull MAgency agency) {
-		if (StringUtils.isEmpty(gRoute.getRouteColor())) {
-			int rsn = Integer.parseInt(gRoute.getRouteShortName());
-			switch (rsn) {
-			// @formatter:off
-			case 1: return "0E4C89";
-			case 2: return "89C340";
-			case 3: return "F78A20";
-			// @formatter:on
-			}
-			throw new MTLog.Fatal("Unexpected route color for %s!", gRoute);
+	public @Nullable String provideMissingRouteColor(@NotNull GRoute gRoute) {
+		final int rsn = Integer.parseInt(gRoute.getRouteShortName());
+		switch (rsn) {
+		// @formatter:off
+		case 1: return "0E4C89";
+		case 2: return "89C340";
+		case 3: return "F78A20";
+		// @formatter:on
 		}
-		return super.getRouteColor(gRoute, agency);
+		throw new MTLog.Fatal("Unexpected route color for %s!", gRoute);
 	}
 
 	@Override
